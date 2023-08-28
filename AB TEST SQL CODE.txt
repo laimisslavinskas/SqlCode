@@ -1,0 +1,50 @@
+A/B TEST SQL Code:
+
+WITH 
+
+campaigns as(
+   SELECT
+      campaign,
+      SUM(impressions) as   impressions
+   FROM  `tc-da-1.turing_data_analytics.adsense_monthly`
+WHERE
+   campaign IN ('NewYear_V1', 'NewYear_V2', 'BlackFriday_V1','BlackFriday_V2') 
+GROUP BY campaign
+)
+
+SELECT
+ events.campaign,
+   campaigns.impressions,
+   COUNT (DISTINCT user_pseudo_id ) AS click_count
+FROM
+   `turing_data_analytics.raw_events` events
+JOIN campaigns
+ON campaigns.Campaign = events.campaign
+WHERE
+events.campaign IN ('NewYear_V1', 'NewYear_V2', 'BlackFriday_V1', 'BlackFriday_V2') AND event_name = 'page_view'
+GROUP BY
+   events.campaign, campaigns.impressions
+-----------------------------------------------------------------------------------------------------------------------------------------------
+Funnels Task Code:
+with t1 as(
+  SELECT DISTINCT user_pseudo_id, event_name,event_value_in_usd,country
+FROM `turing_data_analytics.raw_events`
+)
+
+SELECT
+    CASE
+        WHEN country IN (SELECT t1.country FROM (SELECT t1.country, COUNT(*) AS event_count FROM t1 GROUP BY country ORDER BY event_count DESC LIMIT 3) AS top_countries) THEN country
+        ELSE 'Other'
+    END AS country,
+    COUNT(*) AS event_count,
+    SUM(CASE WHEN t1.event_name = 'session_start' THEN 1 ELSE 0 END) AS session_start_count,
+    SUM(CASE WHEN t1.event_name = 'view_item' THEN 1 ELSE 0 END) AS view_item_count,
+    SUM(CASE WHEN t1.event_name= 'add_to_cart' THEN 1 ELSE 0 END) AS add_to_cart_count,
+    SUM(CASE WHEN t1.event_name = 'purchase' THEN 1 ELSE 0 END) AS purchase_count,
+
+FROM t1
+WHERE t1.event_name IN ('session_start', 'view_item', 'add_to_cart', 'purchase')
+GROUP BY country
+ORDER BY event_count DESC
+
+
