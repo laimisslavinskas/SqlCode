@@ -1,0 +1,35 @@
+
+select 
+  registration_week,
+  SUM(IF(event_week = DATE_ADD(registration_week, INTERVAL 0 WEEK), event_value_in_usd, 0)) / COUNT(DISTINCT user_pseudo_id) AS week0,
+  SUM(IF(event_week = DATE_ADD(registration_week, INTERVAL 1 WEEK), event_value_in_usd, 0)) / COUNT(DISTINCT user_pseudo_id)  AS WEEK_1,
+  SUM(IF(event_week = DATE_ADD(registration_week, INTERVAL 2 WEEK), event_value_in_usd, 0)) / COUNT(DISTINCT user_pseudo_id) AS WEEK_2,
+  SUM(IF(event_week = DATE_ADD(registration_week, INTERVAL 3 WEEK), event_value_in_usd, 0)) / COUNT(DISTINCT user_pseudo_id)  AS WEEK_3,
+  SUM(IF(event_week = DATE_ADD(registration_week, INTERVAL 4 WEEK), event_value_in_usd, 0)) / COUNT(DISTINCT user_pseudo_id) AS WEEK_4,
+  SUM(IF(event_week = DATE_ADD(registration_week, INTERVAL 5 WEEK), event_value_in_usd, 0)) / COUNT(DISTINCT user_pseudo_id)  AS WEEK_5,
+  SUM(IF(event_week = DATE_ADD(registration_week, INTERVAL 6 WEEK), event_value_in_usd, 0)) / COUNT(DISTINCT user_pseudo_id)  AS WEEK_6,
+  SUM(IF(event_week = DATE_ADD(registration_week, INTERVAL 7 WEEK), event_value_in_usd, 0)) / COUNT(DISTINCT user_pseudo_id)  AS WEEK_7,
+  SUM(IF(event_week = DATE_ADD(registration_week, INTERVAL 8 WEEK), event_value_in_usd, 0)) / COUNT(DISTINCT user_pseudo_id) AS WEEK_8,
+  SUM(IF(event_week = DATE_ADD(registration_week, INTERVAL 9 WEEK), event_value_in_usd, 0)) / COUNT(DISTINCT user_pseudo_id)  AS WEEK_9,
+  SUM(IF(event_week = DATE_ADD(registration_week, INTERVAL 10 WEEK), event_value_in_usd, 0)) / COUNT(DISTINCT user_pseudo_id)  AS WEEK_10,
+  SUM(IF(event_week = DATE_ADD(registration_week, INTERVAL 11 WEEK), event_value_in_usd, 0)) / COUNT(DISTINCT user_pseudo_id)  AS WEEK_11,
+  SUM(IF(event_week = DATE_ADD(registration_week, INTERVAL 12 WEEK), event_value_in_usd, 0)) / COUNT(DISTINCT user_pseudo_id)  AS WEEK_12,
+  FROM(
+
+  select
+  raw.user_pseudo_id,
+  reg.registration_week,
+  DATE_TRUNC(PARSE_DATE('%Y%m%d',  event_date), WEEK) AS event_week,
+  coalesce(event_value_in_usd, 0) as event_value_in_usd
+  from turing_data_analytics.raw_events as raw
+  left join
+(
+    select user_pseudo_id, MIN(DATE_TRUNC(PARSE_DATE('%Y%m%d',  event_date), WEEK)) as registration_week
+    from turing_data_analytics.raw_events
+    group by user_pseudo_id
+  ) as reg
+  on raw.user_pseudo_id = reg.user_pseudo_id
+)
+group by registration_week 
+having registration_week <= '2021-01-24'
+order by registration_week asc
